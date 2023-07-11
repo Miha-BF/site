@@ -1,0 +1,196 @@
+﻿<!--@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>-->
+@model FeedbackFormModel
+@using Recaptcha.Web.Mvc;
+
+
+
+
+<link rel="stylesheet" href="../css/Form.css">
+
+<body style="background: #81a6da; margin:auto;">
+
+    <div class="form-page">
+<div class="form-container">
+    @using (Html.BeginForm("Index", "Feedback", FormMethod.Post, new { id = "feedbackForm" }))
+    {
+        @Html.AntiForgeryToken()
+        //для защиты от подделки межсайтовых запросов (CSRF).
+
+        <form id="feedbackForm" style="overflow-y: auto;">
+            <h2>Форма обратной связи</h2>
+
+            <div>
+                @Html.Label("Название организации")
+                @Html.TextBoxFor(model => model.OrganizationName, new { required = "required" })
+                @Html.ValidationMessageFor(model => model.OrganizationName)
+            </div>
+
+             <div>
+                @Html.LabelFor(model => model.Email)
+                @Html.TextBoxFor(model => model.Email, new {type="email", required = "required", style = "width: 100%;padding: 8px;" +
+                $"margin-bottom: 10px;border: 1px solid #ccc; border-radius: 3px; resize: vertical;" })
+                @Html.ValidationMessageFor(model => model.Email)
+            </div>
+
+            <div>
+                @Html.Label("Название услуги")
+                <select id="ServiceName" name="ServiceName" style="width: 100%;padding: 8px;margin-bottom: 10px;
+                                                                   border: 1px solid #ccc;border-radius: 3px;resize: vertical;">
+                    <option value="--Выберите услугу--">--Выберите услугу--</option>
+                    <option value="Перевозка песка">Перевозка песка</option>
+                    <option value="Поставка песка">Поставка песка</option>
+                    <option value="Перевозка щебня">Перевозка щебня</option>
+                    <option value="Поставка щебня">Поставка щебня</option>
+                    <option value="Перевозка ЩПС">Перевозка ЩПС</option>
+                    <option value="Поставка ЩПС">Поставка ЩПС</option>
+                    <option value="Перевозка другого материала">Перевозка другого материала</option>
+                    <option value="Поставка другого материала">Поставка другого материала</option>
+                </select>
+                @Html.ValidationMessageFor(model => model.ServiceName)
+            </div>
+
+             <div id="AnotherMaterial" style="display: none;">
+                @Html.Label("Название другого материала")
+                @Html.TextBoxFor(model => model.AnotherMaterial)
+                @Html.ValidationMessageFor(model => model.AnotherMaterial)
+            </div>
+
+            <div id="fromLocationContainer">
+                @Html.Label("Откуда везем")
+                @Html.TextAreaFor(model => model.FromLocation, new{ @class= "ToLocation", style = "width: 100%;padding: 8px;" +
+                $"margin-bottom: 10px;border: 1px solid #ccc; border-radius: 3px; resize: vertical;"})
+                @Html.ValidationMessageFor(model => model.FromLocation)
+            </div>
+
+            <div>
+                @Html.Label("Куда везем")
+                @Html.TextAreaFor(model => model.ToLocation, new { required = "required", @class= "ToLocation", style = "width: 100%;padding: 8px;" +
+                $"margin-bottom: 10px;border: 1px solid #ccc; border-radius: 3px; resize: vertical;" })
+                @Html.ValidationMessageFor(model => model.ToLocation)
+            </div>
+
+            <div>
+                @Html.Label("До какого числа доставить")
+                        @Html.TextBoxFor(model => model.DeliveryDate, new { type = "date", required = "required", style = "width: 100%;padding: 8px;" +
+                $"margin-bottom: 10px;border: 1px solid #ccc; border-radius: 3px; resize: vertical;" })
+                @Html.ValidationMessageFor(model => model.DeliveryDate)
+            </div>
+
+            <div>
+                @Html.Label("Телефон")
+                        @Html.TextBoxFor(model => model.PhoneNumber, new {required = "required" })
+                @Html.ValidationMessageFor(model => model.PhoneNumber)
+            </div>
+
+            <div>
+                @Html.Label("Как к Вам обращаться")
+                @Html.TextBoxFor(model => model.Greeting, new { required = "required" })
+                @Html.ValidationMessageFor(model => model.Greeting)
+            </div>
+
+            
+            <div style="display:flex;justify-content: center;">
+            @Html.RecaptchaWidget()
+           </div>
+        <div class="privacy-policy" style="text-align: center;margin-top: 13px;">
+            <p>Нажимая на кнопку "Отправить", Вы соглашаетесь с <a asp-action="Privacy">условиями конфиденциальности</a>.</p>
+        </div>
+
+            <h4><button id="submitButton" type="submit">Отправить</button></h4>
+        </form>
+    }
+</div>
+</div>
+</body>
+
+@section Scripts {
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="./js/scripts.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script>
+        // При загрузке страницы
+        window.onload = function () {
+            // Найти форму и кнопку "Отправить"
+            var form = document.getElementById("feedbackForm");
+            var submitButton = document.getElementById("submitButton");
+
+            // При нажатии кнопки "Отправить"
+            submitButton.addEventListener("click", function (event) {
+                // Отменить отправку формы, если reCAPTCHA не пройдена
+                if (!isRecaptchaCompleted()) {
+                    event.preventDefault();
+                }
+            });
+
+            // Проверка, была ли reCAPTCHA успешно пройдена
+            function isRecaptchaCompleted() {
+                // Получить ответ reCAPTCHA
+                var recaptchaResponse = grecaptcha.getResponse();
+
+                // Проверить, является ли ответ пустым или недействительным
+                if (recaptchaResponse === "" || recaptchaResponse === null || recaptchaResponse === undefined) {
+                    alert("Пройдите проверку reCAPTCHA.");
+                    return false;
+                }
+
+                // reCAPTCHA успешно пройдена
+                return true;
+            }
+        };
+    </script>
+
+    <script> 
+        var serviceNameSelect = document.getElementById("ServiceName");
+        var fromLocationContainer = document.getElementById("fromLocationContainer");
+        var fromAnotherMaterial = document.getElementById("AnotherMaterial");
+        fromAnotherMaterial.display = "none";
+
+
+        serviceNameSelect.addEventListener("change", function () {
+            const Postavka = ["Поставка песка", "Поставка щебня", "Поставка ЩПС", "Поставка другого материала"];
+            const AnotherMat = ["Перевозка другого материала", "Поставка другого материала"];
+
+            if (Postavka.includes(serviceNameSelect.value)) {
+                fromLocationContainer.style.display = "none";
+            } else {
+                fromLocationContainer.style.display = "block";
+            }
+
+            if (!AnotherMat.includes(serviceNameSelect.value)) {
+                fromAnotherMaterial.style.display = "none";
+            } else {
+                fromAnotherMaterial.style.display = "block";
+            }
+        });
+
+    </script>
+
+    <!--<script>
+        $(document).ready(function () {
+            $('.ToLocation').on('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        });
+    </script>-->
+
+    <script>
+        $(document).ready(function () {
+            $('.ToLocation').on('input', function () {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        });
+    </script>
+}

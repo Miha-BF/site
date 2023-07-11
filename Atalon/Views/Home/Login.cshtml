@@ -1,0 +1,18 @@
+﻿
+
+@model LoginViewModel
+
+
+<h1>Авторизация</h1>
+
+<form method="post" asp-action="Login">
+    <div>
+        <label asp-for="Username">Имя пользователя:</label>
+        <input type="text" asp-for="Username" />
+    </div>
+    <div>
+        <label asp-for="Password">Пароль:</label>
+        <input type="password" asp-for="Password" />
+    </div>
+    <button type="submit">Войти</button>
+</form>
